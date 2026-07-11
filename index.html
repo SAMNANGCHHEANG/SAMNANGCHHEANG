@@ -741,9 +741,7 @@ function pageExternal(){
     {label:'Gross reserves',data:qres.map(o=>D.Q.res[o.i]),borderColor:p.emerald,backgroundColor:grad('e_res',p.emerald),fill:true,borderWidth:2.2,pointRadius:0,tension:.35},
     {label:'Months of imports (right)',data:qres.map(o=>D.Q.res_mo[o.i]),borderColor:p.gold,borderWidth:2,pointRadius:0,tension:.35,yAxisID:'y2'}]},
     options:Object.assign(baseOpts(),{scales:{x:{grid:{display:false},ticks:{color:p.text2,maxTicksLimit:10}},y:{grid:{color:p.line},border:{display:false},ticks:{color:p.text2}},y2:{position:'right',grid:{display:false},min:0,ticks:{color:p.gold,callback:v=>v+'m'}}}})});
-  {const cf={'US Dollar':'🇺🇸','Chinese Yuan':'🇨🇳','Australian Dollar':'🇦🇺','Pound Sterling':'🇬🇧','Euro':'🇪🇺','Japanese Yen':'🇯🇵'};
-   const ro={};Object.entries(D.resShare).forEach(([k,v])=>ro[(cf[k]?cf[k]+' ':'')+k]=v);
-   donut('e_resshare',ro,[p.royal,p.red,p.emerald,p.navy,p.gold,p.amber]);}
+  donut('e_resshare',D.resShare,[p.royal,p.red,p.emerald,p.navy,p.gold,p.amber]);
   mk('e_reer',{type:'line',data:{labels:ml,datasets:[
     {label:'NEER % y/y',data:sliceM(M.neer_x),borderColor:p.royal,borderWidth:2.2,pointRadius:0,tension:.35},
     {label:'REER % y/y',data:sliceM(M.reer_x),borderColor:p.red,borderWidth:2.2,pointRadius:0,tension:.35}]},options:baseOpts()});
