@@ -1196,6 +1196,22 @@ function pageCGO(){
 const PAGES={overview:pageOverview,real:pageReal,external:pageExternal,monetary:pageMonetary,fiscal:pageFiscal,cgo:pageCGO,banking:pageBanking,cross:pageCross,compare:pageCompare,risk:pageRisk};
 const rendered={};
 // ---- Live AI "Ask" box for each insight panel (works when opened as a Cowork artifact) ----
+// minimal, safe Markdown → HTML for the Ask answers (bold, headings, bullet/numbered lists)
+function mdLite(s){
+  s=String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const inl=t=>t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const lines=s.split(/\r?\n/); let h='',ul=false,ol=false;
+  const closeL=()=>{if(ul){h+='</ul>';ul=false;}if(ol){h+='</ol>';ol=false;}};
+  for(let ln of lines){ln=ln.replace(/\s+$/,'');
+    if(!ln.trim()){closeL();continue;}
+    let m;
+    if(m=ln.match(/^\s*#{1,6}\s+(.*)$/)){closeL();h+='<div style="font-weight:700;margin:8px 0 3px;color:var(--text)">'+inl(m[1])+'</div>';continue;}
+    if(m=ln.match(/^\s*[-*•]\s+(.*)$/)){if(ol){h+='</ol>';ol=false;}if(!ul){h+='<ul style="margin:4px 0;padding-left:18px">';ul=true;}h+='<li style="margin:2px 0">'+inl(m[1])+'</li>';continue;}
+    if(m=ln.match(/^\s*\d+[.)]\s+(.*)$/)){if(ul){h+='</ul>';ul=false;}if(!ol){h+='<ol style="margin:4px 0;padding-left:20px">';ol=true;}h+='<li style="margin:2px 0">'+inl(m[1])+'</li>';continue;}
+    closeL();h+='<p style="margin:5px 0">'+inl(ln.trim())+'</p>';
+  }
+  closeL(); return h;
+}
 async function askInsight(box){
   const inp=box.querySelector('input'), out=box.querySelector('.ask-out'), btn=box.querySelector('button');
   const qv=(inp.value||'').trim(); if(!qv)return;
@@ -1203,11 +1219,12 @@ async function askInsight(box){
   btn.disabled=true; const old=btn.textContent; btn.textContent='…'; out.textContent='Thinking…';
   try{
     const ctx=box.getAttribute('data-ctx')||'';
-    const prompt='You are a macroeconomic analyst assistant for the Cambodia Macroeconomic Dashboard. Answer the question concisely and precisely, grounded in the section context below and standard macro reasoning. If the data needed is not in the context, say so briefly.\n\nSection context:\n'+ctx+'\n\nQuestion: '+qv;
+    const prompt='You are a macroeconomic analyst assistant for the Cambodia Macroeconomic Dashboard. Answer the question concisely and precisely, grounded in the section context below and standard macro reasoning. Write in clean, well-structured text: short paragraphs, a brief bold lead-in for each point, and simple "-" bullet lists where helpful; keep it brief and avoid uncommon words. If the data needed is not in the context, say so briefly.\n\nSection context:\n'+ctx+'\n\nQuestion: '+qv;
     const resp=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
     const r=await resp.json();
     if(!resp.ok){throw new Error(r&&r.error?r.error:'Request failed');}
-    out.textContent=r.answer||JSON.stringify(r);
+    var ans=r.answer||JSON.stringify(r);
+    out.innerHTML=mdLite(ans);
   }catch(e){out.innerHTML='<span style="color:var(--red)">Error: '+(e&&e.message?e.message:e)+'</span>';}
   btn.disabled=false; btn.textContent=old;
 }
@@ -1221,7 +1238,7 @@ function mountAskBoxes(pid){
     box.innerHTML='<div style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--gold)">✦ Ask</span>'
       +'<input type="text" placeholder="Ask a question about this section…" style="flex:1;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);font-size:12px">'
       +'<button style="padding:6px 14px;border:none;border-radius:8px;background:var(--royal);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Ask</button></div>'
-      +'<div class="ask-out" style="margin-top:8px;font-size:12px;color:var(--text2);white-space:pre-wrap;line-height:1.55"></div>';
+      +'<div class="ask-out" style="margin-top:8px;font-size:12px;color:var(--text2);line-height:1.55"></div>';
     box.querySelector('button').onclick=()=>askInsight(box);
     box.querySelector('input').addEventListener('keydown',ev=>{if(ev.key==='Enter')askInsight(box);});
     ai.appendChild(box);
