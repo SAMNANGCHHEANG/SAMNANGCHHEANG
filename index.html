@@ -2419,5 +2419,18 @@ document.querySelectorAll('.card').forEach(c=>{
 show('overview');
 </script>
 
+<script defer src="/_vercel/insights/script.js"></script>
+<script>(function(){try{
+if(location.protocol==='file:')return;
+var nm=localStorage.getItem('dash_viewer_name');
+if(!nm){nm=(prompt('Welcome to the Cambodia Macroeconomic Dashboard!\nPlease enter your name (recorded in the visitors log):')||'Anonymous').trim()||'Anonymous';localStorage.setItem('dash_viewer_name',nm);}
+var sid=Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function send(ev){try{var p=JSON.stringify({sid:sid,name:nm,ev:ev,t:Date.now(),ua:navigator.userAgent.slice(0,90)});
+if(navigator.sendBeacon){navigator.sendBeacon('/api/track',new Blob([p],{type:'application/json'}));}
+else{fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:p,keepalive:true});}}catch(e){}}
+send('start');
+setInterval(function(){if(!document.hidden)send('hb');},60000);
+addEventListener('pagehide',function(){send('end');});
+}catch(e){}})();</script>
 </body>
 </html>
