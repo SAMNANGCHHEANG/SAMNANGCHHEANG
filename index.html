@@ -511,11 +511,12 @@ footer{border-top:1px solid var(--line);padding:22px 0 34px;font-size:11px;color
 <div class="page" id="p-rppi"><div class="wrap">
   <div class="sec-title serif">Residential Property Price Index (RPPI)</div>
   <div class="sec-sub">The Residential Property Price Index tracks prices of residential properties collateralised at banks and financial institutions, compiled monthly by the National Bank of Cambodia. It is a key indicator of collateral values, household wealth and real-estate-linked credit risk.</div>
+  <div class="ai" id="rppi_ai"></div>
   <div class="grid">
     <div class="card c6"><h3>Residential Property Prices (RPPI)</h3><div class="cs">Year-on-Year Growth (%) — Phnom Penh vs. Other Provinces</div><div class="ch"><canvas id="r_rppi"></canvas></div><div class="src">Source: National Bank of Cambodia</div></div>
     <div class="card c6"><h3>Residential Property Prices (RPPI)</h3><div class="cs">Month-on-Month Change (%) — Phnom Penh vs. Other Provinces</div><div class="ch"><canvas id="r_rppi_mom"></canvas></div><div class="src">Source: National Bank of Cambodia</div></div>
-    <div class="card c6"><h3>Phnom Penh RPPI by Area — Year-on-Year</h3><div class="cs">Year-on-Year Growth (%) — Phnom Penh, Central East, Inner Suburb, Outer Suburb</div><div class="ch"><canvas id="r_rppi_pp"></canvas></div><div class="src">Source: National Bank of Cambodia</div></div>
-    <div class="card c6"><h3>Phnom Penh RPPI by Area — Month-on-Month</h3><div class="cs">Month-on-Month Change (%) — Phnom Penh, Central East, Inner Suburb, Outer Suburb</div><div class="ch"><canvas id="r_rppi_pp_mom"></canvas></div><div class="src">Source: National Bank of Cambodia</div></div>
+    <div class="card c6"><h3>Phnom Penh RPPI by Area — Year-on-Year</h3><div class="cs">Year-on-Year Growth (%) — Phnom Penh, Central East, Inner Suburb, Outer Suburb</div><div class="ch"><canvas id="r_rppi_pp"></canvas></div><div class="src">Source: National Bank of Cambodia. Note: <b>Central East</b> = the historic city core (khans Chamkar Mon, Doun Penh, Prampir Meakkakra, Boeng Keng Kang, Tuol Kouk); <b>Inner Suburb</b> = the first ring of urban districts (Mean Chey, Chbar Ampov, Russey Keo, Sen Sok, Chraoy Chongvar); <b>Outer Suburb</b> = the city fringe (Pur SenChey, Dangkao, Praek Pnov, Kamboul).</div></div>
+    <div class="card c6"><h3>Phnom Penh RPPI by Area — Month-on-Month</h3><div class="cs">Month-on-Month Change (%) — Phnom Penh, Central East, Inner Suburb, Outer Suburb</div><div class="ch"><canvas id="r_rppi_pp_mom"></canvas></div><div class="src">Source: National Bank of Cambodia. Area definitions as in the year-on-year chart.</div></div>
     <div class="card c6"><h3>Property Transactions</h3><div class="cs">Number of Transactions per Month — Total, Phnom Penh and Other Provinces</div><div class="ch"><canvas id="r_rpptx"></canvas></div><div class="src">Source: National Bank of Cambodia</div></div>
     <div class="card c6"><h3>Share of Property Transactions by Area</h3><div class="cs">% of Total Monthly Transactions — Central East, Inner Suburb, Outer Suburb (Phnom Penh) and Other Provinces</div><div class="ch"><canvas id="r_rpptx_sh"></canvas></div><div class="src">Source: National Bank of Cambodia; NBC staff calculation</div></div>
   </div>
@@ -617,6 +618,9 @@ const charts = {};
 const lastIdx = a => { if(!a) return -1; for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; };
 const lastVal = a => { const i=lastIdx(a); return i<0?null:a[i]; };
 const qLab = a => { const i=lastIdx(a); return i<0?'—':D.qdates[i]; };
+// FSI series at native frequency (quarterly to 2023, MONTHLY from Jan 2024) with matching labels
+const FSIS = () => (D.fsi&&D.fsi.series)||D.Q;
+const fsiLab = k => { const F=D.fsi; if(!F||!F.series[k]) return qLab(D.Q[k]||[]); const i=lastIdx(F.series[k]); return i<0?'—':F.dates[i]; };
 const valAt = (a,i)=> (i>=0&&i<a.length)?a[i]:null;
 const fmt = (v,d=1)=> v==null?'—':v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const fmt0 = v=> v==null?'—':Math.round(v).toLocaleString('en-US');
@@ -728,9 +732,9 @@ function kpiRow(){
     {l:'Credit Growth',v:lastVal(M.psc_g),suf:'%',prev:valAt(M.psc_g,lastIdx(M.psc_g)-1),spark:M.psc_g,goodUp:true,per:monLab(d[lastIdx(M.psc_g)]),color:'--royal'},
     {l:'Broad Money (M2)',v:lastVal(M.m2_g),suf:'%',prev:valAt(M.m2_g,lastIdx(M.m2_g)-1),spark:M.m2_g,goodUp:true,per:monLab(d[lastIdx(M.m2_g)]),color:'--emerald',note:'y/y growth'},
     {l:'Deposit Growth',v:lastVal(M.dep_g),suf:'%',prev:valAt(M.dep_g,lastIdx(M.dep_g)-1),spark:M.dep_g,goodUp:true,per:monLab(d[lastIdx(M.dep_g)]),color:'--emerald'},
-    {l:'NPL Ratio',v:lastVal(D.Q.npl),suf:'%',prev:valAt(D.Q.npl,lastIdx(D.Q.npl)-1),spark:D.Q.npl,goodUp:false,per:qLab(D.Q.npl),color:'--red'},
-    {l:'Banking ROA',v:lastVal(D.Q.roa),suf:'%',prev:valAt(D.Q.roa,lastIdx(D.Q.roa)-1),spark:D.Q.roa,goodUp:true,per:qLab(D.Q.roa),color:'--gold',note:'FSI Framework'},
-    {l:'Banking ROE',v:lastVal(D.Q.roe),suf:'%',prev:valAt(D.Q.roe,lastIdx(D.Q.roe)-1),spark:D.Q.roe,goodUp:true,per:qLab(D.Q.roe),color:'--gold',note:'FSI Framework'},
+    {l:'NPL Ratio',v:lastVal(FSIS().npl),suf:'%',prev:valAt(FSIS().npl,lastIdx(FSIS().npl)-1),spark:FSIS().npl,goodUp:false,per:fsiLab('npl'),color:'--red'},
+    {l:'Banking ROA',v:lastVal(FSIS().roa),suf:'%',prev:valAt(FSIS().roa,lastIdx(FSIS().roa)-1),spark:FSIS().roa,goodUp:true,per:fsiLab('roa'),color:'--gold',note:'FSI Framework'},
+    {l:'Banking ROE',v:lastVal(FSIS().roe),suf:'%',prev:valAt(FSIS().roe,lastIdx(FSIS().roe)-1),spark:FSIS().roe,goodUp:true,per:fsiLab('roe'),color:'--gold',note:'FSI Framework'},
     {l:'Dollarization',v:lastVal(M.fcd),suf:'%',prev:valAt(M.fcd,lastIdx(M.fcd)-1),spark:M.fcd,goodUp:false,per:monLab(d[lastIdx(M.fcd)]),color:'--navy2',note:'FCD share of deposits'},
   ];
   const wrap=document.getElementById('kpis'); wrap.innerHTML='';
@@ -763,7 +767,7 @@ function healthScore(){
   const ext=clamp((lastVal(D.Q.res_mo)/6)*80+(lastVal(D.Y.ca_gdp)>-5?20:5),0,100);
   const fiscal=clamp(100+ (D.Y.bal_gdp[D.Y.bal_gdp.length-2]+3)*15 - Math.max(0,(26-40))*0,0,100);
   const cg=lastVal(M.psc_g); const credit=clamp(cg>=5&&cg<=15?100:100-Math.min(Math.abs(cg-10)*8,80),0,100);
-  const fin=clamp(100-(lastVal(D.Q.npl)-3)*10+(lastVal(D.Q.car)-15)*2,0,100);
+  const fin=clamp(100-(lastVal(FSIS().npl)-3)*10+(lastVal(FSIS().car)-15)*2,0,100);
   const parts=[['Growth',growth,'--royal'],['Price stability',infl,'--red'],['External buffers',ext,'--emerald'],['Fiscal position',fiscal,'--gold'],['Credit conditions',credit,'--navy2'],['Financial stability',fin,'--amber']];
   const score=Math.round(parts.reduce((s,p)=>s+p[1],0)/parts.length);
   document.getElementById('scoreN').textContent=score;
@@ -812,10 +816,10 @@ function pageOverview(){
      options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>wlab[c.dataIndex]+': '+fmt(lv[c.dataIndex])+'%'+(c.dataIndex>0?' ('+(lv[c.dataIndex]-lv[c.dataIndex-1]>=0?'+':'')+fmt(lv[c.dataIndex]-lv[c.dataIndex-1])+' pp)':'')}}},
      scales:{x:{grid:{display:false},ticks:{color:p.text2,font:{size:10}}},y:{min:0,grid:{color:p.line},border:{display:false},ticks:{color:p.text2,callback:v=>v+'%'}}}})});}
   // AI commentary
-  const infl=lastVal(M.infl), core=lastVal(M.core), tour=lastVal(mma3(M.tour_g)), cg=lastVal(M.psc_g), resm=lastVal(D.Q.res_mo), npl=lastVal(D.Q.npl);
+  const infl=lastVal(M.infl), core=lastVal(M.core), tour=lastVal(mma3(M.tour_g)), cg=lastVal(M.psc_g), resm=lastVal(D.Q.res_mo), npl=lastVal(FSIS().npl);
   document.getElementById('ov-ai').innerHTML=`<div class="ai-t">✦ Macroeconomic Assessment</div>
   <p>Cambodia's economy enters mid-2026 with <span class="hl">solid but slowing momentum</span>. Official estimates place 2025 real GDP growth at <span class="hl">${fmt(D.Y.gdp_g[D.Y.gdp_g.length-2])}%</span>, while the IMF (4.8% for 2025, 3.0% for 2026), World Bank (3.9%) and ADB (4.5%) expect a much softer 2026 on export margin pressures, the border closure with Thailand, and weaker remittances and tourism.</p>
-  <p><span class="hl">Price pressures have re-emerged</span>: headline inflation jumped to <span class="hl">${fmt(infl)}%</span> y/y in ${monLab(D.mdates[lastIdx(M.infl)])} (and ${fmt(lastVal(D.cpi.series['All Items']))}% in ${monLab(D.cpi.dates[lastIdx(D.cpi.series['All Items'])])} per NIS), the fastest since 2022, driven mainly by food; core inflation is ${fmt(core)}%. <span class="hl">Credit growth remains subdued at ${fmt(cg)}%</span> y/y with the NPL ratio elevated at ${fmt(npl)}% (${qLab(D.Q.npl)}), keeping financial-sector vulnerabilities at the centre of the risk picture. <span class="hl">Tourism has contracted sharply</span> (${fmt(tour)}% y/y, 3mma) after the Thai border closure.</p>
+  <p><span class="hl">Price pressures have re-emerged</span>: headline inflation jumped to <span class="hl">${fmt(infl)}%</span> y/y in ${monLab(D.mdates[lastIdx(M.infl)])} (and ${fmt(lastVal(D.cpi.series['All Items']))}% in ${monLab(D.cpi.dates[lastIdx(D.cpi.series['All Items'])])} per NIS), the fastest since 2022, driven mainly by food; core inflation is ${fmt(core)}%. <span class="hl">Credit growth remains subdued at ${fmt(cg)}%</span> y/y with the NPL ratio elevated at ${fmt(npl)}% (${fsiLab('npl')}), keeping financial-sector vulnerabilities at the centre of the risk picture. <span class="hl">Tourism has contracted sharply</span> (${fmt(tour)}% y/y, 3mma) after the Thai border closure.</p>
   <p>Buffers remain reassuring: gross international reserves of <span class="hl">$${fmt(lastVal(M.res)/1000)} bn</span> cover about <span class="hl">${fmt(resm)} months of imports</span>, the riel is stable around ${fmt0(lastVal(M.fx))} KHR/USD, and public debt (${fmt(D.debt.total2025,2)} $bn, PV ≈ ${D.debt.pvDebtGdp}% of GDP) stays at low risk of distress. The near-term policy mix argues for vigilance on food-price pass-through, continued NPL resolution, and fiscal support calibrated to the export slowdown.</p>`;
 }
 
@@ -2019,6 +2023,20 @@ function pageBanking(){
 /* ---------- RPPI (Residential Property Price Index) ---------- */
 function pageRPPI(){
   const p=P();
+  // insight
+  {const ai=document.getElementById('rppi_ai');
+   if(ai){const M=D.M;
+     const li=lastIdx(M.rppi_yoy),mth=li>=0?monLab(D.mdates[li]):'—';
+     const ov=lastVal(M.rppi_yoy),pp=lastVal(M.rppi_pp_yoy),pr=lastVal(M.rppi_pr_yoy),mm=lastVal(M.rppi_mom);
+     const areas=[['Central East',lastVal(M.rppi_ce)],['Inner Suburb',lastVal(M.rppi_is)],['Outer Suburb',lastVal(M.rppi_os)]].filter(a=>a[1]!=null);
+     const weak=areas.length?areas.reduce((a,b)=>b[1]<a[1]?b:a):null;
+     const tx=lastVal(mma3(M.rppi_tx)),txg=lastVal(M.rppi_tx_g);
+     const ppShare=(()=>{const i=lastIdx(M.rppi_tx);if(i<0||!M.rppi_tx[i]||!M.rppi_tx_pp||M.rppi_tx_pp[i]==null)return null;return 100*M.rppi_tx_pp[i]/M.rppi_tx[i];})();
+     const dir=v=>v==null?'—':(v<0?'down '+fmt(Math.abs(v))+'%':'up '+fmt(v)+'%');
+     ai.innerHTML=`<div class="ai-t">✦ RPPI Insight</div>
+     <p><span class="hl">Prices.</span> Residential property prices are <span class="hl">${dir(ov)} year on year</span> as of ${mth} (m/m: ${mm==null?'—':(mm>=0?'+':'')+fmt(mm,2)}%). Phnom Penh is ${dir(pp)} while other provinces are ${dir(pr)}, so the correction remains <span class="hl">concentrated in the capital</span>. ${weak?`Within Phnom Penh, the weakest area is <span class="hl">${weak[0]}</span> (${fmt(weak[1])}% y/y).`:''}</p>
+     <p><span class="hl">Activity.</span> Transactions are running at about ${tx==null?'—':fmt0(tx)} per month (3-month average${txg==null?'':', '+(txg>=0?'+':'')+fmt(txg)+'% y/y'})${ppShare==null?'':', with roughly '+fmt0(ppShare)+'% of them in Phnom Penh'}. Because the RPPI is built from bank-collateral valuations, sustained price declines feed directly into collateral values and real-estate-linked credit risk.</p>`;
+   }}
   // property market (monthly), RPPI from Jan 2021, transactions from Jan 2020
   // the global 2Y/3Y/5Y/All toolbar filter (RANGE) applies on top of the data start
   const rng=a=>RANGE===0?a:a.slice(-RANGE);
@@ -2227,12 +2245,12 @@ function pageCompare(){
 
 function pageRisk(){
   const p=P(),M=D.M,Q=D.Q;
-  const infl=lastVal(M.infl),cg=lastVal(M.psc_g),npl=lastVal(Q.npl),resm=lastVal(Q.res_mo),ca=lastVal(D.Y.ca_gdp),
+  const infl=lastVal(M.infl),cg=lastVal(M.psc_g),npl=lastVal(FSIS().npl),resm=lastVal(Q.res_mo),ca=lastVal(D.Y.ca_gdp),
     bal=D.Y.bal_gdp[D.Y.bal_gdp.length-2],fx=lastVal(M.fx_yoy),tour=lastVal(mma3(M.tour_g)),rppi=lastVal(M.rppi_yoy);
   const risks=[
     ['Inflation risk',infl>6?2:infl>4?1:0,`Headline ${fmt(infl)}% y/y, food-driven spike; core ${fmt(lastVal(M.core))}%`,'>4% watch, >6% high'],
     ['Growth risk',1,`Official ~6% vs IMF/WB/ADB 3.9–4.5% for 2026; tourism ${fmt(tour)}% y/y`,'consensus below potential'],
-    ['Banking / credit risk',npl>5?2:npl>3?1:0,`NPL ${fmt(npl)}% (${qLab(Q.npl)}), NPL net of prov. ${fmt(lastVal(Q.nplnet))}% of capital; CAR ${fmt(lastVal(Q.car))}%`,'NPL >3% watch, >5% high'],
+    ['Banking / credit risk',npl>5?2:npl>3?1:0,`NPL ${fmt(npl)}% (${fsiLab('npl')}), NPL net of prov. ${fmt(lastVal(FSIS().nplnet))}% of capital; CAR ${fmt(lastVal(FSIS().car))}%`,'NPL >3% watch, >5% high'],
     ['Property market risk',rppi<-2?2:rppi<0?1:0,`RPPI ${fmt(rppi)}% y/y; Phnom Penh weaker; thin transactions`,'sustained decline'],
     ['Fiscal risk',Math.abs(bal)>4?2:Math.abs(bal)>2.5?1:0,`Deficit ${fmt(bal)}% of GDP (2025p); revenue ${fmt(D.Y.rev_gdp[D.Y.rev_gdp.length-2])}% of GDP`,'deficit >2.5% watch'],
     ['Debt sustainability',0,`PV of debt ${D.debt.pvDebtGdp}% of GDP vs 55% ceiling; low distress risk (DSA)`,'IMF/WB DSA rating'],
