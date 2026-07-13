@@ -1881,7 +1881,9 @@ function pageBanking(){
 function pageRPPI(){
   const p=P();
   // property market (monthly), RPPI from Jan 2021, transactions from Jan 2020
-  const rp0=D.mdates.indexOf('2021-01'), rps=a=>rp0>=0?a.slice(rp0):a, rpLab=rps(D.mdates).map(monLab);
+  // the global 2Y/3Y/5Y/All toolbar filter (RANGE) applies on top of the data start
+  const rng=a=>RANGE===0?a:a.slice(-RANGE);
+  const rp0=D.mdates.indexOf('2021-01'), rps=a=>rng(rp0>=0?a.slice(rp0):a), rpLab=rps(D.mdates).map(monLab);
   mk('r_rppi',{type:'line',data:{labels:rpLab,datasets:[
     {label:'Overall RPPI',data:rps(D.M.rppi_yoy),borderColor:p.navy,borderWidth:2.4,pointRadius:0,tension:.35},
     {label:'Phnom Penh RPPI',data:rps(D.M.rppi_pp_yoy),borderColor:p.red,borderWidth:2,pointRadius:0,tension:.35},
@@ -1906,7 +1908,7 @@ function pageRPPI(){
     {label:'Outer Suburb',data:rps(D.M.rppi_os_mom||[]),borderColor:p.emerald,borderWidth:2,pointRadius:0,tension:.35}]},
     options:Object.assign(baseOpts(),{plugins:{legend:{labels:{color:p.text2,boxWidth:12,usePointStyle:true,pointStyle:'rectRounded',padding:14,font:{size:10.5}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw,2)+'%'}}},
       scales:{x:{grid:{display:false},ticks:{color:p.text2,maxTicksLimit:12}},y:{grid:{color:p.line},border:{display:false},ticks:{color:p.text2,callback:v=>v+'%'}}}})});
-  const tx0=D.mdates.indexOf('2020-01'), txs=a=>tx0>=0?a.slice(tx0):a, txLab=txs(D.mdates).map(monLab);
+  const tx0=D.mdates.indexOf('2020-01'), txs=a=>rng(tx0>=0?a.slice(tx0):a), txLab=txs(D.mdates).map(monLab);
   mk('r_rpptx',{type:'line',data:{labels:txLab,datasets:[{label:'Transactions',data:txs(D.M.rppi_tx),borderColor:p.gold,backgroundColor:grad('r_rpptx',p.gold,.2),fill:true,borderWidth:2,pointRadius:0,tension:.3}]},options:Object.assign(baseOpts(),{plugins:{legend:{display:false},tooltip:{}},scales:{x:{grid:{display:false},ticks:{color:p.text2,maxTicksLimit:12}},y:{grid:{color:p.line},border:{display:false},ticks:{color:p.text2}}}})});
 }
 
